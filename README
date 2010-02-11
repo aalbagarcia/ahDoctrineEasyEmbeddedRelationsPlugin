@@ -72,10 +72,10 @@ To embed one or more relations, add this to one of your form's configure method 
           'noNewForm' => true,
           'newFormLabel' => 'New repository!!!', 
           'newFormClass' => 'ahIntranetSubversionRepositoryNewForm',
-          'newFormClassArgs' => array('sf_user' => $this->getOption('sf_user')),
+          'newFormClassArgs' => array(array('sf_user' => $this->getOption('sf_user'))),
           'displayEmptyRelations' => false,
           'formClass' => 'ahIntranetSubversionRepositoryEmbeddedForm',
-          'formClassArgs' => array('sf_user' => $this->getOption('sf_user'))
+          'formClassArgs' => array(array('ah_add_delete_checkbox' => false, 'another_form_option') => ...))
         ),
         '...' => array(
           ...
@@ -133,26 +133,42 @@ Only the first option is required, the rest can be guessed using the schema and 
     
   * `newFormClass` (string, not required): the form class to use for the empty form
   
-  * `newFormClassArgs` (array, not required): form class options to pass to the empty form class on instantiation
+  * `newFormClassArgs` (array of arrays, not required): form class options to pass to the empty form class on instantiation.
+    Explanation for why it's an array of arrays: the way embedRelation works uses reflection to construct the right form objects. Now, the first argument is always the model object, the second is the form option array and the third is the local CSRF secret for the form.
+    You don't need to worry about the first one (the model object) because this is always null for the new form. If you want to pass some more options to the related form object (like the user object to avoid using sfContext) just follow the example above.
+    I could have changed this (because I implemented it) but I don't want to confuse the developer because when you look at the option `formClassArgs` below it's the same mechanism and I can't change that short of copying the whole embedRelation method over to the ahBaseFormDoctrine class, thereby losing the chance to automatically get upstream bugfixes. :)
   
   * `formClass` (string, not required): the form class to use for the existing related objects. 
-    If you want to use the embedded form on its own but also want to delete related objects inside this embedding form, create a new form (in the example above: ahIntranetSubversionRepositoryEmbeddedForm) extending the original embedded form class (in the example above: ahIntranetSubversionRepositoryForm) and add the following code:
+  
+  * `formClassArgs` (array of arrays, not required): form class options to pass to the existing related objects form class on instantiation
+    As of version 1.1 it's not necessary to create a separate form class for the existing related forms to display the delete checkbox.
+    This is now handled by the symfony event dispatcher. If you want to change how that works you can always copy over this method and change it to suit your needs:
     
         [php]
-        public function configure()
+        public function listenToFormPostConfigureEvent(sfEvent $event)
         {
-          parent::configure();
+          $form = $event->getSubject();
           
-          if ($this->object->exists())
+          if($form instanceof sfFormDoctrine && $form->getOption('ah_add_delete_checkbox', false) && !$form->isNew())
           {
-            $this->widgetSchema['delete_object'] = new sfWidgetFormInputCheckbox(array('label' => 'Delete'));
-            $this->validatorSchema['delete_object'] = new sfValidatorPass();
+            $form->setWidget('delete_object', new sfWidgetFormInputCheckbox(array('label' => 'Just destroy the damn object!')));
+            $form->setValidator('delete_object', new sfValidatorPass());
           }
         }
-      
-      When dealing with this inside of plugin classes you'll want to use the setup method for this.
-  
-  * `formClassArgs` (array, not required): form class options to pass to the existing related objects form class on instantiation
+        
+    Or if you're like me and want to save space, here's another version you can use:
+    
+        [php]    
+        public function listenToFormPostConfigureEvent(sfEvent $event)
+        {
+          if ($form = parent::listenToFormPostConfigureEvent($event))
+          {
+            $form->widgetSchema['delete_object']->setOption('label', 'Just destroy the damn object!');
+          }
+        }
+    
+    This works because we're calling the plugin's event handler method.
+    This either returns the form so it added the delete checkbox and the validator and you can act on that or false. Neat and tidy. :)
   
   * `displayEmptyRelations` (boolean, not required): set this to true (false is the default) if you want to check for existing related objects yourself. This can be done in the form template and is useful if you want to let the user know that 'There are no related repositories yet.'. The default is just not displaying anything in this case, which works for me. :)
 

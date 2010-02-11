@@ -15,6 +15,9 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
   public function embedRelations(array $relations)
   {
     $this->embedRelations = $relations;
+    
+    $this->getEventDispatcher()->connect('form.post_configure', array($this, 'listenToFormPostConfigureEvent'));
+    
     foreach (array_keys($relations) as $relationName)
     {
       if (!isset($relations[$relationName]['noNewForm']) || !$relations[$relationName]['noNewForm'])
@@ -24,7 +27,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
         $formArgs = !isset($relations[$relationName]['newFormClassArgs']) ? array() : $relations[$relationName]['newFormClassArgs'];
         $r = new ReflectionClass($formClass);
         
-        $newForm = $r->newInstanceArgs($formArgs);
+        $newForm = $r->newInstanceArgs(array_merge(array(null), array($formArgs)));
         $newForm->setDefault($relation->getForeignColumnName(), $this->object[$relation->getLocalColumnName()]);
         if (isset($relations[$relationName]['newFormLabel']))
         {
@@ -34,7 +37,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
       }
       
       $formClass = !isset($relations[$relationName]['formClass']) ? null : $relations[$relationName]['formClass'];
-      $formArgs = !isset($relations[$relationName]['formClassArgs']) ? array() : $relations[$relationName]['formClassArgs'];
+      $formArgs = array_merge((!isset($relations[$relationName]['formClassArgs']) ? array() : $relations[$relationName]['formClassArgs']), array(array('ah_add_delete_checkbox' => true)));
       $this->embedRelation($relationName, $formClass, $formArgs);
       
       if (
@@ -45,6 +48,23 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
         unset($this[$relationName]);
       }
     }
+    
+    $this->getEventDispatcher()->disconnect('form.post_configure', array($this, 'listenToFormPostConfigureEvent'));
+  }
+  
+  public function listenToFormPostConfigureEvent(sfEvent $event)
+  {
+    $form = $event->getSubject();
+    
+    if($form instanceof sfFormDoctrine && $form->getOption('ah_add_delete_checkbox', false) && !$form->isNew())
+    {
+      $form->setWidget('delete_object', new sfWidgetFormInputCheckbox(array('label' => 'Delete')));
+      $form->setValidator('delete_object', new sfValidatorPass());
+      
+      return $form;
+    }
+    
+    return false;
   }
   
   /**

@@ -12,7 +12,7 @@
   </lead>
   <date>2010-02-11</date>
   <version>
-    <release>1.0.1</release>
+    <release>1.1.0</release>
     <api>1.0.0</api>
   </version>
   <stability>
@@ -87,6 +87,23 @@
       <license>MIT</license>
       <notes>
         Fixed README (typos, logic).
+      </notes>
+    </release>
+    <release>
+      <version>
+        <release>1.1.0</release>
+        <api>1.0.0</api>
+      </version>
+      <stability>
+       <release>stable</release>
+       <api>stable</api>
+      </stability>
+      <license uri="http://www.symfony-project.com/license">MIT license</license>
+      <date>2010-02-11</date>
+      <license>MIT</license>
+      <notes>
+        - fixed a few bugs, so passing options to the embedded forms actually works.
+        - not necessary anymore to create a dedicated form to add the delete checkboxes, this is now handled by symfony's event dispatcher and the form.post_configure event. :)
       </notes>
     </release>
   </changelog>
