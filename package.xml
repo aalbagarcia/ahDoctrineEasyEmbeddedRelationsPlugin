@@ -104,6 +104,7 @@
       <notes>
         - fixed a few bugs, so passing options to the embedded forms actually works.
         - not necessary anymore to create a dedicated form to add the delete checkboxes, this is now handled by symfony's event dispatcher and the form.post_configure event. :)
+        - updated the README
       </notes>
     </release>
   </changelog>

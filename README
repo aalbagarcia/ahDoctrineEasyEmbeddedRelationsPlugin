@@ -1,4 +1,4 @@
-# ahDoctrineEasyEmbeddedRelations plugin (for symfony 1.3) #
+# ahDoctrineEasyEmbeddedRelations plugin #
 
 The `ahDoctrineEasyEmbeddedRelationsPlugin` is a symfony plugin that provides a Doctrine base form class to allow easy and more powerful embedding of forms.
 
@@ -12,7 +12,8 @@ For the inspiration of this plugin please read this blog post: [Embedding Relati
 
   * Install the plugin (via a Subversion checkout)
   
-        svn co http://svn.symfony-project.com/plugins/ahDoctrineEasyEmbeddedRelationsPlugin/trunk plugins/ahDoctrineEasyEmbeddedRelationsPlugin
+        svn co http://svn.symfony-project.com/plugins/ahDoctrineEasyEmbeddedRelationsPlugin/trunk
+                                              plugins/ahDoctrineEasyEmbeddedRelationsPlugin
 
   * Activate the plugin in `config/ProjectConfiguration.class.php`
   
@@ -29,7 +30,7 @@ For the inspiration of this plugin please read this blog post: [Embedding Relati
           }
         }
   
-  * Change the parent class in `lib/form/doctrine/BaseFormDoctrine.class.php`
+  * Change the parent class in `lib/form/doctrine/BaseFormDoctrine.class.php` to `ahBaseFormDoctrine `
   
         [php]
         abstract class BaseFormDoctrine extends ahBaseFormDoctrine
@@ -75,7 +76,7 @@ To embed one or more relations, add this to one of your form's configure method 
           'newFormClassArgs' => array(array('sf_user' => $this->getOption('sf_user'))),
           'displayEmptyRelations' => false,
           'formClass' => 'ahIntranetSubversionRepositoryEmbeddedForm',
-          'formClassArgs' => array(array('ah_add_delete_checkbox' => false, 'another_form_option') => ...))
+          'formClassArgs' => array(array('ah_add_delete_checkbox' => false, 'another_form_option' => ...))
         ),
         '...' => array(
           ...
@@ -168,7 +169,7 @@ Only the first option is required, the rest can be guessed using the schema and 
         }
     
     This works because we're calling the plugin's event handler method.
-    This either returns the form so it added the delete checkbox and the validator and you can act on that or false. Neat and tidy. :)
+    This either returns the form so it added the delete checkbox and the validator and you can act on that, or it returns false and you don't act on that. Neat and tidy. :)
   
   * `displayEmptyRelations` (boolean, not required): set this to true (false is the default) if you want to check for existing related objects yourself. This can be done in the form template and is useful if you want to let the user know that 'There are no related repositories yet.'. The default is just not displaying anything in this case, which works for me. :)
 
