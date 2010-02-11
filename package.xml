@@ -10,9 +10,9 @@
     <email>info@asapdesign.de</email>
     <active>yes</active>
   </lead>
-  <date>2010-02-10</date>
+  <date>2010-02-11</date>
   <version>
-    <release>1.0.0</release>
+    <release>1.0.1</release>
     <api>1.0.0</api>
   </version>
   <stability>
@@ -71,6 +71,22 @@
       <license>MIT</license>
       <notes>
         Initial release.
+      </notes>
+    </release>
+    <release>
+      <version>
+        <release>1.0.1</release>
+        <api>1.0.0</api>
+      </version>
+      <stability>
+       <release>stable</release>
+       <api>stable</api>
+      </stability>
+      <license uri="http://www.symfony-project.com/license">MIT license</license>
+      <date>2010-02-11</date>
+      <license>MIT</license>
+      <notes>
+        Fixed README (typos, logic).
       </notes>
     </release>
   </changelog>

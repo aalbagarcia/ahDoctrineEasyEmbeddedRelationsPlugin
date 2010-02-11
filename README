@@ -154,7 +154,7 @@ Only the first option is required, the rest can be guessed using the schema and 
   
   * `formClassArgs` (array, not required): form class options to pass to the existing related objects form class on instantiation
   
-  * `displayEmptyRelations` (boolean, not required): set this to true (false is the default) if you want to check for existing related objects yourself. This can be done in the form template and is useful if you want to let the user know that 'There are no related repositories yet.'. The default is just displaying anything in this case which works for me. :)
+  * `displayEmptyRelations` (boolean, not required): set this to true (false is the default) if you want to check for existing related objects yourself. This can be done in the form template and is useful if you want to let the user know that 'There are no related repositories yet.'. The default is just not displaying anything in this case, which works for me. :)
 
 ## Questions, bugs, feature requests? ##
 
