@@ -68,6 +68,71 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
   }
   
   /**
+   * Embed a Doctrine_Collection relationship in to a form
+   *
+   *     [php]
+   *     $userForm = new UserForm($user);
+   *     $userForm->embedRelation('Groups AS groups');
+   *
+   * @param  string $relationName  The name of the relation and an optional alias
+   * @param  string $formClass     The name of the form class to use
+   * @param  array  $formArguments Arguments to pass to the constructor (related object will be shifted onto the front)
+   *
+   * @throws InvalidArgumentException If the relationship is not a collection
+   */
+  public function embedRelation($relationName, $formClass = null, $formArgs = array())
+  {
+    if (false !== $pos = stripos($relationName, ' as '))
+    {
+      $fieldName = substr($relationName, $pos + 4);
+      $relationName = substr($relationName, 0, $pos);
+    }
+    else
+    {
+      $fieldName = $relationName;
+    }
+
+    $relation = $this->getObject()->getTable()->getRelation($relationName);
+
+    $r = new ReflectionClass(null === $formClass ? $relation->getClass().'Form' : $formClass);
+
+    if ($relation->isOneToOne())
+    {
+      $relationInformation = $relation->toArray();
+      $relatedPk = $relation->getLocalFieldName();
+      //sfContext::getInstance()->getLogger()->info(print_r($relation->__toString(), true));
+      //sfContext::getInstance()->getLogger()->info(get_class($relation));
+      if (get_class($relation) == 'Doctrine_Relation_LocalKey')
+      {
+        //$relatedObject = $relation->fetchRelatedFor($this->getObject());
+        $relatedObject = $relation->getTable()->find($this->object[$relation->getLocalColumnName()]);
+        
+        //sfContext::getInstance()->getLogger()->info(print_r($this->getObject()->$relationName->toArray(false), true));
+        sfContext::getInstance()->getLogger()->info($relation->getLocalColumnName());
+        sfContext::getInstance()->getLogger()->info(print_r($this->object->toArray(), true));
+        $this->embedForm($fieldName, $r->newInstanceArgs(array_merge(array($relatedObject), $formArgs)));
+      } else
+      {
+        $this->embedForm($fieldName, $r->newInstanceArgs(array_merge(array($this->getObject()->$relationName), $formArgs)));
+      }
+    }
+    else
+    {
+      $subForm = new sfForm();
+
+      foreach ($this->getObject()->$relationName as $index => $childObject)
+      {
+        $form = $r->newInstanceArgs(array_merge(array($childObject), $formArgs));
+
+        $subForm->embedForm($index, $form);
+        $subForm->getWidgetSchema()->setLabel($index, (string) $childObject);
+      }
+
+      $this->embedForm($fieldName, $subForm);
+    }
+  }
+  
+  /**
    * Here we just drop the embedded creation forms if no value has been provided for them (this simulates a non-required embedded form),
    * please provide the fields for the related embedded form in the call to $this->embedRelations() so we don't throw validation errors
    * if the user did not want to add a new related object
