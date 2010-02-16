@@ -10,9 +10,9 @@
     <email>info@asapdesign.de</email>
     <active>yes</active>
   </lead>
-  <date>2010-02-11</date>
+  <date>2010-02-16</date>
   <version>
-    <release>1.1.0</release>
+    <release>1.2.0</release>
     <api>1.0.0</api>
   </version>
   <stability>
@@ -105,6 +105,24 @@
         - fixed a few bugs, so passing options to the embedded forms actually works.
         - not necessary anymore to create a dedicated form to add the delete checkboxes, this is now handled by symfony's event dispatcher and the form.post_configure event. :)
         - updated the README
+      </notes>
+    </release>
+    <release>
+      <version>
+        <release>1.2.0</release>
+        <api>1.0.0</api>
+      </version>
+      <stability>
+       <release>stable</release>
+       <api>stable</api>
+      </stability>
+      <license uri="http://www.symfony-project.com/license">MIT license</license>
+      <date>2010-02-16</date>
+      <license>MIT</license>
+      <notes>
+        - fixed: no useless "add new" forms anymore when the embedded relation is one-to-one and a related object exists :)
+        - removed all debug code calls
+        - improved code documentation
       </notes>
     </release>
   </changelog>

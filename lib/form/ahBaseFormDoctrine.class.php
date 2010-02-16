@@ -9,8 +9,9 @@
  */
 abstract class ahBaseFormDoctrine extends sfFormDoctrine
 {
-  protected $scheduledForDeletion = array(); // related objects scheduled for deletion
-  protected $embedRelations = array();
+  protected
+    $scheduledForDeletion = array(), // related objects scheduled for deletion
+    $embedRelations = array();       // so we can check which relations are embedded in this form
   
   public function embedRelations(array $relations)
   {
@@ -20,28 +21,48 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
     
     foreach (array_keys($relations) as $relationName)
     {
+      $relation = $this->getObject()->getTable()->getRelation($relationName);
       if (!isset($relations[$relationName]['noNewForm']) || !$relations[$relationName]['noNewForm'])
       {
-        $relation = $this->getObject()->getTable()->getRelation($relationName);
-        $formClass = !isset($relations[$relationName]['newFormClass']) ? $relation->getClass().'Form' : $relations[$relationName]['newFormClass'];
-        $formArgs = !isset($relations[$relationName]['newFormClassArgs']) ? array() : $relations[$relationName]['newFormClassArgs'];
-        $r = new ReflectionClass($formClass);
-        
-        $newForm = $r->newInstanceArgs(array_merge(array(null), array($formArgs)));
-        $newForm->setDefault($relation->getForeignColumnName(), $this->object[$relation->getLocalColumnName()]);
-        if (isset($relations[$relationName]['newFormLabel']))
+        if (($relation->isOneToOne() && !$this->getObject()->relatedExists($relationName)) || !$relation->isOneToOne())
         {
-          $newForm->getWidgetSchema()->setLabel($relations[$relationName]['newFormLabel']);
+          $formClass = !isset($relations[$relationName]['newFormClass']) ? $relation->getClass().'Form' : $relations[$relationName]['newFormClass'];
+          $formArgs = !isset($relations[$relationName]['newFormClassArgs']) ? array() : $relations[$relationName]['newFormClassArgs'];
+          $r = new ReflectionClass($formClass);
+          
+          $newForm = $r->newInstanceArgs(array_merge(array(null), array($formArgs)));
+          // FIXME/TODO: check if this even works for one-to-one
+          // CORRECTION 1: Not really, it creates another record but doesn't link it to this object!
+          // CORRECTION 2: No, it can't, silly! For that to work the id of the not-yet-existant related record would have to be known...
+          // Think about overriding the save method and after calling parent::save($con) we should update the relations that:
+          //   1. are one-to-one AND
+          //   2. are LocalKey :)
+          $newForm->setDefault($relation->getForeignColumnName(), $this->object[$relation->getLocalColumnName()]);
+          if (isset($relations[$relationName]['newFormLabel']))
+          {
+            $newForm->getWidgetSchema()->setLabel($relations[$relationName]['newFormLabel']);
+          }
+          
+          $this->embedForm('new_'.$relationName, $newForm);
         }
-        $this->embedForm('new_'.$relationName, $newForm);
       }
       
       $formClass = !isset($relations[$relationName]['formClass']) ? null : $relations[$relationName]['formClass'];
       $formArgs = array_merge((!isset($relations[$relationName]['formClassArgs']) ? array() : $relations[$relationName]['formClassArgs']), array(array('ah_add_delete_checkbox' => true)));
       $this->embedRelation($relationName, $formClass, $formArgs);
       
+      /*
+       * Unset the relation form(s) if:
+       * (1. One-to-many relation and there are no related objects yet (count of embedded forms is 0) OR
+       * 2. One-to-one relation and embedded form is new (no related object yet))
+       * AND
+       * (3. Option `displayEmptyRelations` was either not set by the user or was set by the user and is false)
+       */
       if (
-        count($this->getEmbeddedForm($relationName)->getEmbeddedForms()) === 0 && 
+        (
+          ((!$relation->isOneToOne()) && (count($this->getEmbeddedForm($relationName)->getEmbeddedForms()) === 0)) ||
+          ($relation->isOneToOne() && $this->getEmbeddedForm($relationName)->isNew())
+        ) && 
         (!isset($relations[$relationName]['displayEmptyRelations']) || !$relations[$relationName]['displayEmptyRelations'])
       )
       {
@@ -65,71 +86,6 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
     }
     
     return false;
-  }
-  
-  /**
-   * Embed a Doctrine_Collection relationship in to a form
-   *
-   *     [php]
-   *     $userForm = new UserForm($user);
-   *     $userForm->embedRelation('Groups AS groups');
-   *
-   * @param  string $relationName  The name of the relation and an optional alias
-   * @param  string $formClass     The name of the form class to use
-   * @param  array  $formArguments Arguments to pass to the constructor (related object will be shifted onto the front)
-   *
-   * @throws InvalidArgumentException If the relationship is not a collection
-   */
-  public function embedRelation($relationName, $formClass = null, $formArgs = array())
-  {
-    if (false !== $pos = stripos($relationName, ' as '))
-    {
-      $fieldName = substr($relationName, $pos + 4);
-      $relationName = substr($relationName, 0, $pos);
-    }
-    else
-    {
-      $fieldName = $relationName;
-    }
-
-    $relation = $this->getObject()->getTable()->getRelation($relationName);
-
-    $r = new ReflectionClass(null === $formClass ? $relation->getClass().'Form' : $formClass);
-
-    if ($relation->isOneToOne())
-    {
-      $relationInformation = $relation->toArray();
-      $relatedPk = $relation->getLocalFieldName();
-      //sfContext::getInstance()->getLogger()->info(print_r($relation->__toString(), true));
-      //sfContext::getInstance()->getLogger()->info(get_class($relation));
-      if (get_class($relation) == 'Doctrine_Relation_LocalKey')
-      {
-        //$relatedObject = $relation->fetchRelatedFor($this->getObject());
-        $relatedObject = $relation->getTable()->find($this->object[$relation->getLocalColumnName()]);
-        
-        //sfContext::getInstance()->getLogger()->info(print_r($this->getObject()->$relationName->toArray(false), true));
-        sfContext::getInstance()->getLogger()->info($relation->getLocalColumnName());
-        sfContext::getInstance()->getLogger()->info(print_r($this->object->toArray(), true));
-        $this->embedForm($fieldName, $r->newInstanceArgs(array_merge(array($relatedObject), $formArgs)));
-      } else
-      {
-        $this->embedForm($fieldName, $r->newInstanceArgs(array_merge(array($this->getObject()->$relationName), $formArgs)));
-      }
-    }
-    else
-    {
-      $subForm = new sfForm();
-
-      foreach ($this->getObject()->$relationName as $index => $childObject)
-      {
-        $form = $r->newInstanceArgs(array_merge(array($childObject), $formArgs));
-
-        $subForm->embedForm($index, $form);
-        $subForm->getWidgetSchema()->setLabel($index, (string) $childObject);
-      }
-
-      $this->embedForm($fieldName, $subForm);
-    }
   }
   
   /**
@@ -157,7 +113,8 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
       
       if (isset($values[$relationName]))
       {
-        foreach ($values[$relationName] as $i => $relationValues)
+        $oneToOneRelationFix = $this->getObject()->getTable()->getRelation($relationName)->isOneToOne() ? array($values[$relationName]) : $values[$relationName];
+        foreach ($oneToOneRelationFix as $i => $relationValues)
         {
           if (isset($relationValues['delete_object']) && $relationValues['id'])
           {
@@ -181,11 +138,28 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
     {
       foreach ($this->scheduledForDeletion as $relationName => $ids)
       {
+        $relation = $this->getObject()->getTable()->getRelation($relationName);
         foreach ($ids as $index => $id)
         {
-          unset($values[$relationName][$index]);
-          unset($this->object[$relationName][$index]);
-          Doctrine::getTable((string)$this->getObject()->getTable()->getRelation($relationName)->getClass())->findOneById($id)->delete();
+          if ($relation->isOneToOne())
+          {
+            unset($values[$relationName]);
+          }
+          else
+          {
+            unset($values[$relationName][$index]);
+          }
+          
+          if (!$relation->isOneToOne())
+          {
+            unset($this->object[$relationName][$index]);
+          }
+          else
+          {
+            $this->object->clearRelated($relationName);
+          }
+          
+          Doctrine::getTable($relation->getClass())->findOneById($id)->delete();
         }
       }
     }
@@ -195,6 +169,12 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
   
   /**
    * Saves embedded form objects.
+   * TODO: Check if it's possible to use embedRelations in one form and and also use embedRelations in the embedded form!
+   *       This means this would be possible:
+   *         1. Edit a user object via the userForm and 
+   *         2. Embed the groups relation (user-has-many-groups) into the groupsForm and embed that into userForm and 
+   *         2. Embed the permissions relation (group-has-many-permissions) into the groupsForm and
+   *         3. Just for kinks, embed the permissions relation again (user-has-many-permissions) into the userForm
    *
    * @param mixed $con   An optional connection object
    * @param array $forms An array of sfForm instances
@@ -210,6 +190,11 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
     {
       if ($form instanceof sfFormObject)
       {
+        /** 
+         * we know it's a form but we don't know what (embedded) relation it represents; 
+         * this is necessary because we only care about the relations that we(!) embedded 
+         * so there isn't anything weird happening
+         */
         $relationName = $this->getRelationByEmbeddedFormClass($form);
         
         if (($relationName && !array_key_exists($form->getObject()->getId(), array_flip($this->scheduledForDeletion[$relationName]))) || !$relationName)
@@ -228,7 +213,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
   /**
    * Get the used relation alias when given an embedded form
    *
-   * @param sfForm $form A sfForm instance
+   * @param sfForm $form A BaseForm instance
    */
   private function getRelationByEmbeddedFormClass($form)
   {
