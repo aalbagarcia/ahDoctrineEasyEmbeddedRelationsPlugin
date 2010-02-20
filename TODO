@@ -1,5 +1,5 @@
 # TODO #
-## Version 1.2 ##
+## Version 1.3 ##
 
     * check for LocalKey/ForeignKey relation? Because it's only possible now to 
       correctly embed relations that have a field in them that corresponds to one 
