@@ -15,6 +15,10 @@ For the inspiration of this plugin please read this blog post: [Embedding Relati
         svn co http://svn.symfony-project.com/plugins/ahDoctrineEasyEmbeddedRelationsPlugin/trunk
                                               plugins/ahDoctrineEasyEmbeddedRelationsPlugin
 
+  * Install the plugin (via a Git clone)
+  
+        git clone git://github.com/annismckenzie/ahDoctrineEasyEmbeddedRelationsPlugin.git
+
   * Activate the plugin in `config/ProjectConfiguration.class.php`
   
         [php]
