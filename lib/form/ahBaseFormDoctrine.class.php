@@ -30,14 +30,32 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
           $formArgs = !isset($relations[$relationName]['newFormClassArgs']) ? array() : $relations[$relationName]['newFormClassArgs'];
           $r = new ReflectionClass($formClass);
           
-          $newForm = $r->newInstanceArgs(array_merge(array(null), array($formArgs)));
+          //sfContext::getInstance()->getLogger()->info($relation);
+          
+          if (Doctrine_Relation::MANY === $relation->getType())
+          {
+            $newFormObjectClass = $relation->getClass();
+            $newFormObject = new $newFormObjectClass();
+            $newFormObject[get_class($this->getObject())] = $this->getObject();
+          } else
+          {
+            $newFormObject = $this->getObject()->$relationName;
+          }
+          
+          $newForm = $r->newInstanceArgs(array_merge(array($newFormObject), array($formArgs)));
+          $newFormIdentifiers = $newForm->getObject()->getTable()->getIdentifierColumnNames();
+          foreach ($newFormIdentifiers as $primaryKey)
+          {
+            unset($newForm[$primaryKey]);
+          }
+          unset($newForm[$relation->getForeignColumnName()]);
+          
           // FIXME/TODO: check if this even works for one-to-one
           // CORRECTION 1: Not really, it creates another record but doesn't link it to this object!
           // CORRECTION 2: No, it can't, silly! For that to work the id of the not-yet-existant related record would have to be known...
           // Think about overriding the save method and after calling parent::save($con) we should update the relations that:
           //   1. are one-to-one AND
           //   2. are LocalKey :)
-          $newForm->setDefault($relation->getForeignColumnName(), $this->object[$relation->getLocalColumnName()]);
           if (isset($relations[$relationName]['newFormLabel']))
           {
             $newForm->getWidgetSchema()->setLabel($relations[$relationName]['newFormLabel']);
@@ -101,12 +119,21 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
     {
       if (!isset($keys['noNewForm']) || !$keys['noNewForm'])
       {
-        foreach ($keys['considerNewFormEmptyFields'] as $key)
+        if (isset($keys['considerNewFormEmptyFields']) && count($keys['considerNewFormEmptyFields']) > 0 && isset($values['new_'.$relationName]))
         {
-          if ('' === trim($values['new_'.$relationName][$key]))
+          $emptyFields = 0;
+          foreach ($keys['considerNewFormEmptyFields'] as $key)
           {
+            if ('' === trim($values['new_'.$relationName][$key])) {
+              $emptyFields++;
+            } elseif (is_array($values['new_'.$relationName][$key]) && count($values['new_'.$relationName][$key]) === 0) {
+              $emptyFields++;
+            }
+          }
+          
+          if ($emptyFields === count($keys['considerNewFormEmptyFields'])) {
+            sfContext::getInstance()->getLogger()->info('Dropping relation :'.$relationName);
             unset($values['new_'.$relationName], $this['new_'.$relationName]);
-            break;
           }
         }
       }
@@ -141,21 +168,17 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
         $relation = $this->getObject()->getTable()->getRelation($relationName);
         foreach ($ids as $index => $id)
         {
-          if ($relation->isOneToOne())
-          {
+          if ($relation->isOneToOne()) {
             unset($values[$relationName]);
           }
-          else
-          {
+          else {
             unset($values[$relationName][$index]);
           }
           
-          if (!$relation->isOneToOne())
-          {
+          if (!$relation->isOneToOne()) {
             unset($this->object[$relationName][$index]);
           }
-          else
-          {
+          else {
             $this->object->clearRelated($relationName);
           }
           
@@ -197,7 +220,10 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
          */
         $relationName = $this->getRelationByEmbeddedFormClass($form);
         
-        if (($relationName && !array_key_exists($form->getObject()->getId(), array_flip($this->scheduledForDeletion[$relationName]))) || !$relationName)
+        //sfContext::getInstance()->getLogger()->info(print_r($this->scheduledForDeletion, true));
+        //sfContext::getInstance()->getLogger()->info($relationName);
+        
+        if (!$relationName || !isset($this->scheduledForDeletion[$relationName]) || ($relationName && !array_key_exists($form->getObject()->getId(), array_flip($this->scheduledForDeletion[$relationName]))))
         {
           $form->saveEmbeddedForms($con);
           $form->getObject()->save($con);

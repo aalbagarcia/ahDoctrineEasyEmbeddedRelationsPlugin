@@ -33,6 +33,7 @@
       </dir>
       <file name="LICENSE" role="data"/>
       <file name="README" role="data"/>
+      <file name="TODO" role="data"/>
     </dir>
   </contents>
   <dependencies>
