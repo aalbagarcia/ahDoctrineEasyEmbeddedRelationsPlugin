@@ -10,9 +10,9 @@
     <email>info@asapdesign.de</email>
     <active>yes</active>
   </lead>
-  <date>2010-02-16</date>
+  <date>2010-03-30</date>
   <version>
-    <release>1.2.0</release>
+    <release>1.2.2</release>
     <api>1.0.0</api>
   </version>
   <stability>
@@ -124,6 +124,24 @@
         - fixed: no useless "add new" forms anymore when the embedded relation is one-to-one and a related object exists :)
         - removed all debug code calls
         - improved code documentation
+      </notes>
+    </release>
+    <release>
+      <version>
+        <release>1.2.2</release>
+        <api>1.0.0</api>
+      </version>
+      <stability>
+       <release>stable</release>
+       <api>stable</api>
+      </stability>
+      <license uri="http://www.symfony-project.com/license">MIT license</license>
+      <date>2010-03-30</date>
+      <license>MIT</license>
+      <notes>
+        - cleaned up TODO
+        - no code changes!
+        Because of an error, there was no "real" release version 1.2.1, there is a tag for it in the Subversion repository but nothing more. :)
       </notes>
     </release>
   </changelog>

@@ -1,17 +1,6 @@
 # TODO #
+
 ## Version 1.3 ##
-
-    * check for LocalKey/ForeignKey relation? Because it's only possible now to 
-      correctly embed relations that have a field in them that corresponds to one 
-      of the field in the embedding form:
-          * ahProjectmanagerProject (APP) embeds ahProjectmanagerSubversionRepository (APSR), 
-            where APSR has the project_id field that corresponds to APP's id field
-        This is a problem because:
-          * APP embeds sfGuardUser (SGU), where SGU has no field that corresponds to APP's id field
-            *but* APP has a user_id field that corresponds to SGU's id field!
-    * check for one-to-one relations because if the relation exists there's no need for an "Add new" form!
-
-## Version 1.5 ##
 
     * try improving and abstracting the functionality to ignore empty "add new" forms so this does not have 
       to be managed in the embedding form class anymore
