@@ -73,14 +73,15 @@ To embed one or more relations, add this to one of your form's configure method 
       ...
       $this->embedRelations(array(
         'Repositories' => array(
-          'considerNewFormEmptyFields' => array('name', 'repo_path', 'repo_username', 'repo_password'),
-          'noNewForm' => true,
-          'newFormLabel' => 'New repository!!!', 
-          'newFormClass' => 'ahIntranetSubversionRepositoryNewForm',
-          'newFormClassArgs' => array(array('sf_user' => $this->getOption('sf_user'))),
-          'displayEmptyRelations' => false,
-          'formClass' => 'ahIntranetSubversionRepositoryEmbeddedForm',
-          'formClassArgs' => array(array('ah_add_delete_checkbox' => false, 'another_form_option' => ...))
+          'considerNewFormEmptyFields'    => array('name', 'repo_path', 'repo_username', 'repo_password'),
+          'noNewForm'                     => true,
+          'newFormLabel'                  => 'New repository!!!', 
+          'newFormClass'                  => 'ahIntranetSubversionRepositoryNewForm',
+          'newFormClassArgs'              => array(array('sf_user' => $this->getOption('sf_user'))),
+          'displayEmptyRelations'         => false,
+          'formClass'                     => 'ahIntranetSubversionRepositoryEmbeddedForm',
+          'formClassArgs'                 => array(array('ah_add_delete_checkbox' => false, 'another_form_option' => ...)),
+          'newFormAfterExistingRelations' => false
         ),
         '...' => array(
           ...
@@ -143,7 +144,7 @@ Only the first option is required, the rest can be guessed using the schema and 
     You don't need to worry about the first one (the model object) because this is always null for the new form. If you want to pass some more options to the related form object (like the user object to avoid using sfContext) just follow the example above.
     I could have changed this (because I implemented it) but I don't want to confuse the developer because when you look at the option `formClassArgs` below it's the same mechanism and I can't change that short of copying the whole embedRelation method over to the ahBaseFormDoctrine class, thereby losing the chance to automatically get upstream bugfixes. :)
   
-  * `formClass` (string, not required): the form class to use for the existing related objects. 
+  * `formClass` (string, not required): the form class to use for the existing related objects.
   
   * `formClassArgs` (array of arrays, not required): form class options to pass to the existing related objects form class on instantiation
     As of version 1.1 it's not necessary to create a separate form class for the existing related forms to display the delete checkbox.
@@ -175,7 +176,9 @@ Only the first option is required, the rest can be guessed using the schema and 
     This works because we're calling the plugin's event handler method.
     This either returns the form so it added the delete checkbox and the validator and you can act on that, or it returns false and you don't act on that. Neat and tidy. :)
   
-  * `displayEmptyRelations` (boolean, not required): set this to true (false is the default) if you want to check for existing related objects yourself. This can be done in the form template and is useful if you want to let the user know that 'There are no related repositories yet.'. The default is just not displaying anything in this case, which works for me. :)
+  * `displayEmptyRelations` (boolean, not required): set this option to true (false is the default) if you want to check for existing related objects yourself. This can be done in the form template and is useful if you want to let the user know that 'There are no related repositories yet.'. The default is just not displaying anything in this case, which works for me. :)
+  
+  * `newFormAfterExistingRelations` (boolean, not required): set this option to true to display the empty form to add new related objects below the existing related objects
 
 ## Questions, bugs, feature requests? ##
 

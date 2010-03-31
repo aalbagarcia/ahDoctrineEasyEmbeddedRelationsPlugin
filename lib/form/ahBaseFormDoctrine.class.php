@@ -86,6 +86,11 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
       {
         unset($this[$relationName]);
       }
+      
+      if (isset($relations[$relationName]['newFormAfterExistingRelations']) || $relations[$relationName]['newFormAfterExistingRelations'] && isset($this['new_'.$relationName]))
+      {
+        $this->getWidgetSchema()->moveField('new_'.$relationName, sfWidgetFormSchema::AFTER, $relationName);
+      }
     }
     
     $this->getEventDispatcher()->disconnect('form.post_configure', array($this, 'listenToFormPostConfigureEvent'));
@@ -132,7 +137,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
           }
           
           if ($emptyFields === count($keys['considerNewFormEmptyFields'])) {
-            sfContext::getInstance()->getLogger()->info('Dropping relation :'.$relationName);
+            //sfContext::getInstance()->getLogger()->info('Dropping relation :'.$relationName);
             unset($values['new_'.$relationName], $this['new_'.$relationName]);
           }
         }
