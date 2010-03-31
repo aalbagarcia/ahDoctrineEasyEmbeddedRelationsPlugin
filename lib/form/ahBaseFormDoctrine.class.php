@@ -87,7 +87,10 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
         unset($this[$relationName]);
       }
       
-      if (isset($relations[$relationName]['newFormAfterExistingRelations']) || $relations[$relationName]['newFormAfterExistingRelations'] && isset($this['new_'.$relationName]))
+      if (
+        isset($relations[$relationName]['newFormAfterExistingRelations']) && $relations[$relationName]['newFormAfterExistingRelations'] && 
+        && isset($this[$relationName]) && isset($this['new_'.$relationName])
+      )
       {
         $this->getWidgetSchema()->moveField('new_'.$relationName, sfWidgetFormSchema::AFTER, $relationName);
       }
