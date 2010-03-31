@@ -12,7 +12,7 @@
   </lead>
   <date>2010-03-31</date>
   <version>
-    <release>1.2.3</release>
+    <release>1.2.4</release>
     <api>1.0.0</api>
   </version>
   <stability>
@@ -146,7 +146,7 @@
     </release>
     <release>
       <version>
-        <release>1.2.3</release>
+        <release>1.2.4</release>
         <api>1.0.0</api>
       </version>
       <stability>
@@ -159,6 +159,7 @@
       <notes>
         - added ability to display the empty form to add new related objects below the already existing related objects
         - documented new option in the README
+        Because of an error, there was no "real" release version 1.2.3, there is a tag for it in the Subversion repository but nothing more. :)
       </notes>
     </release>
   </changelog>
