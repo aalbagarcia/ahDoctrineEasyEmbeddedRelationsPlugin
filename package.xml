@@ -10,9 +10,9 @@
     <email>info@asapdesign.de</email>
     <active>yes</active>
   </lead>
-  <date>2010-03-30</date>
+  <date>2010-03-31</date>
   <version>
-    <release>1.2.2</release>
+    <release>1.2.3</release>
     <api>1.0.0</api>
   </version>
   <stability>
@@ -142,6 +142,23 @@
         - cleaned up TODO
         - no code changes!
         Because of an error, there was no "real" release version 1.2.1, there is a tag for it in the Subversion repository but nothing more. :)
+      </notes>
+    </release>
+    <release>
+      <version>
+        <release>1.2.3</release>
+        <api>1.0.0</api>
+      </version>
+      <stability>
+       <release>stable</release>
+       <api>stable</api>
+      </stability>
+      <license uri="http://www.symfony-project.com/license">MIT license</license>
+      <date>2010-03-31</date>
+      <license>MIT</license>
+      <notes>
+        - added ability to display the empty form to add new related objects below the already existing related objects
+        - documented new option in the README
       </notes>
     </release>
   </changelog>
