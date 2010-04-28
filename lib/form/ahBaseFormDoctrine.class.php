@@ -256,13 +256,10 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
          */
         $relationName = $this->getRelationByEmbeddedFormClass($form);
 
-        //sfContext::getInstance()->getLogger()->info(print_r($this->scheduledForDeletion, true));
-        //sfContext::getInstance()->getLogger()->info($relationName);
-
         if (!$relationName || !isset($this->scheduledForDeletion[$relationName]) || ($relationName && !array_key_exists($form->getObject()->getId(), array_flip($this->scheduledForDeletion[$relationName]))))
         {
-          $form->saveEmbeddedForms($con);
           $form->getObject()->save($con);
+          $form->saveEmbeddedForms($con);
         }
       }
       else
