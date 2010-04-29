@@ -6,7 +6,7 @@
  * @package     ahDoctrineEasyEmbeddedRelationsPlugin
  * @subpackage  config
  * @author      Daniel Lohse, Steve Guhr <info@asaphosting.de>
- * @version     SVN: $Id: PluginConfiguration.class.php 12675 2008-11-06 08:07:42Z Kris.Wallsmith $
+ * @version     SVN: $Id: ahDoctrineEasyEmbeddedRelationsPluginConfiguration.class.php 136 2010-04-26 21:16:52Z koto $
  */
 class ahDoctrineEasyEmbeddedRelationsPluginConfiguration extends sfPluginConfiguration
 {

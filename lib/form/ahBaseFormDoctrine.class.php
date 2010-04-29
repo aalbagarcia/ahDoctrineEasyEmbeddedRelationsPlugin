@@ -5,13 +5,37 @@
  *
  * @package    ahDoctrineEasyEmbeddedRelationsPlugin
  * @subpackage form
- * @author     Daniel Lohse, Steve Guhr <info@asaphosting.de>, Krzysztof Kotowicz <kkotowicz at gmail dot com>
+ * @author     Daniel Lohse <info@asaphosting.de>
+ * @author     Steve Guhr <info@asaphosting.de>
+ * @author     Krzysztof Kotowicz <kkotowicz at gmail dot com>
  */
 abstract class ahBaseFormDoctrine extends sfFormDoctrine
 {
   protected
     $scheduledForDeletion = array(), // related objects scheduled for deletion
-    $embedRelations = array();       // so we can check which relations are embedded in this form
+    $embedRelations = array(),       // so we can check which relations are embedded in this form
+    $defaultRelationSettings = array(
+        'considerNewFormEmptyFields' => array(),
+        'noNewForm' => false,
+        'newFormLabel' => null,
+        'newFormClass' => null,
+        'newFormClassArgs' => array(),
+        'formClass' => null,
+        'formClassArgs' => array(),
+        'displayEmptyRelations' => false,
+        'newFormAfterExistingRelations' => false,
+        'multipleNewForms' => false,
+        'newFormsInitialCount' => 1,
+        'newFormsContainerForm' => null, // pass BaseForm object here or we will create ahNewRelationsContainerForm
+        'newRelationButtonLabel' => '+',
+        'newRelationAddByCloning' => true,
+        'newRelationUseJSFramework' => 'jQuery'
+    );
+
+  protected function addDefaultRelationSettings(array $settings)
+  {
+    return array_merge($this->defaultRelationSettings, $settings);
+  }
 
   public function embedRelations(array $relations)
   {
@@ -21,38 +45,46 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
 
     foreach ($relations as $relationName => $relationSettings)
     {
+      $relationSettings = $this->addDefaultRelationSettings($relationSettings);
+
       $relation = $this->getObject()->getTable()->getRelation($relationName);
-      if (!isset($relationSettings['noNewForm']) || !$relationSettings['noNewForm'])
+      if (!$relationSettings['noNewForm'])
       {
+        $containerName = 'new_'.$relationName;
         if (($relation->isOneToOne() && !$this->getObject()->relatedExists($relationName)) || !$relation->isOneToOne())
         {
-          $formLabel = isset($relationSettings['newFormLabel']) ? $relationSettings['newFormLabel'] : null;
-          if (!empty($relationSettings['multipleNewForms'])) // allow multiple new forms for this relation
+          $formLabel = $relationSettings['newFormLabel'];
+          if ($relationSettings['multipleNewForms']) // allow multiple new forms for this relation
           {
-
-            $newFormsCount = !empty($relationSettings['newFormsInitialCount']) ? $relationSettings['newFormsInitialCount'] : 1;
-
-            $subForm = new sfForm();
-            unset($subForm[sfForm::$CSRFFieldName]);
+            $newFormsCount = $relationSettings['newFormsInitialCount'];
+            
+            $subForm = $this->newFormsContainerFormFactory($relationSettings, $containerName);
             for ($i = 0; $i < $newFormsCount; $i++)
             {
-              // we need to create new forms with cloned object inside (otherwise only the last new values would be saved)
+              /*
+               * we need to create new forms with cloned object inside
+               * (otherwise only the last new values would be saved)
+               */
               $newForm = $this->embeddedFormFactory($relationName, $relationSettings, $relation, $i + 1);
               $subForm->embedForm($i, $newForm);
             }
             $subForm->getWidgetSchema()->setLabel($formLabel);
-            $this->embedForm('new_'.$relationName, $subForm);
+            $this->embedForm($containerName, $subForm);
           }
           else // just a single new form for this relation
           {
             $newForm = $this->embeddedFormFactory($relationName, $relationSettings, $relation, $formLabel);
-            $this->embedForm('new_'.$relationName, $newForm);
+            $this->embedForm($containerName, $newForm);
           }
         }
       }
-
-      $formClass = !isset($relationSettings['formClass']) ? null : $relationSettings['formClass'];
-      $formArgs = array_merge((!isset($relationSettings['formClassArgs']) ? array() : $relationSettings['formClassArgs']), array(array('ah_add_delete_checkbox' => true)));
+      
+      $formClass = $relationSettings['formClass'];
+      $formArgs = array_merge(
+        $relationSettings['formClassArgs'], 
+        array(array('ah_add_delete_checkbox' => true))
+      );
+      
       $this->embedRelation($relationName, $formClass, $formArgs);
 
       /*
@@ -67,14 +99,14 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
           ((!$relation->isOneToOne()) && (count($this->getEmbeddedForm($relationName)->getEmbeddedForms()) === 0)) ||
           ($relation->isOneToOne() && $this->getEmbeddedForm($relationName)->isNew())
         ) &&
-        (!isset($relationSettings['displayEmptyRelations']) || !$relationSettings['displayEmptyRelations'])
+        (!$relationSettings['displayEmptyRelations'])
       )
       {
         unset($this[$relationName]);
       }
 
       if (
-        isset($relationSettings['newFormAfterExistingRelations']) && $relationSettings['newFormAfterExistingRelations'] &&
+        $relationSettings['newFormAfterExistingRelations'] &&
         isset($this[$relationName]) && isset($this['new_'.$relationName])
       )
       {
@@ -101,8 +133,10 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
   }
 
   /**
-   * Here we just drop the embedded creation forms if no value has been provided for them (this simulates a non-required embedded form),
-   * please provide the fields for the related embedded form in the call to $this->embedRelations() so we don't throw validation errors
+   * Here we just drop the embedded creation forms if no value has been
+   * provided for them (this simulates a non-required embedded form),
+   * please provide the fields for the related embedded form in the call
+   * to $this->embedRelations() so we don't throw validation errors
    * if the user did not want to add a new related object
    *
    * @see sfForm::doBind()
@@ -111,11 +145,13 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
   {
     foreach ($this->embedRelations as $relationName => $keys)
     {
-      if (!isset($keys['noNewForm']) || !$keys['noNewForm'])
+      $keys = $this->addDefaultRelationSettings($keys);
+
+      if (!$keys['noNewForm'])
       {
         $containerName = 'new_'.$relationName;
 
-        if (!empty($keys['multipleNewForms'])) // just a single new form for this relation
+        if ($keys['multipleNewForms']) // just a single new form for this relation
         {
           if (array_key_exists($containerName, $values))
           {
@@ -295,7 +331,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
    */
   protected function isNewFormEmpty(array $values, array $keys)
   {
-    if (!isset($keys['considerNewFormEmptyFields']) || count($keys['considerNewFormEmptyFields']) == 0 || !isset($values)) return false;
+    if (count($keys['considerNewFormEmptyFields']) == 0 || !isset($values)) return false;
 
     $emptyFields = 0;
     foreach ($keys['considerNewFormEmptyFields'] as $key)
@@ -314,7 +350,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
     {
       return true;
     }
-    
+
     return false;
   }
 
@@ -330,8 +366,8 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
   private function embeddedFormFactory($relationName, array $relationSettings, Doctrine_Relation $relation, $formLabel = null)
   {
       $newFormObject = $this->embeddedFormObjectFactory($relationName, $relation);
-      $formClass = !isset($relationSettings['newFormClass']) ? $relation->getClass().'Form' : $relationSettings['newFormClass'];
-      $formArgs = !isset($relationSettings['newFormClassArgs']) ? array() : $relationSettings['newFormClassArgs'];
+      $formClass = empty($relationSettings['newFormClass']) ? $relation->getClass().'Form' : $relationSettings['newFormClass'];
+      $formArgs = empty($relationSettings['newFormClassArgs']) ? array() : $relationSettings['newFormClassArgs'];
       $r = new ReflectionClass($formClass);
 
       $newForm = $r->newInstanceArgs(array_merge(array($newFormObject), array($formArgs)));
@@ -352,7 +388,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
       {
         $newForm->getWidgetSchema()->setLabel($formLabel);
       }
-      
+
       return $newForm;
   }
 
@@ -373,7 +409,34 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
     {
       $newFormObject = $this->getObject()->$relationName;
     }
-    
+
     return $newFormObject;
+  }
+
+  /**
+   * Create and initialize form that will embed 'newly created relation' subforms
+   * If no object is given in 'newFormsContainerForm' parameter, it will
+   * initialize custom form bundled with this plugin
+   * @param array $relationSettings
+   * @return sfForm (ahNewRelationsContainerForm by default)
+   */
+  private function newFormsContainerFormFactory(array $relationSettings, $containerName)
+  {
+    $subForm = $relationSettings['newFormsContainerForm'];
+
+    if (!$subForm)
+    {
+      $subForm = new ahNewRelationsContainerForm(
+        array('new_relation' => $relationSettings['newRelationButtonLabel']),
+        array(
+          'containerName' => $containerName, 
+          'addByCloning' => $relationSettings['newRelationAddByCloning'],
+          'useJSFramework' => $relationSettings['newRelationUseJSFramework']
+        )
+      );
+    }
+
+    unset($subForm[$subForm->getCSRFFieldName()]);
+    return $subForm;
   }
 }
