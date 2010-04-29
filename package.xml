@@ -10,9 +10,9 @@
     <email>info@asapdesign.de</email>
     <active>yes</active>
   </lead>
-  <date>2010-04-28</date>
+  <date>2010-04-29</date>
   <version>
-    <release>1.3.1</release>
+    <release>1.3.2</release>
     <api>1.0.0</api>
   </version>
   <stability>
@@ -198,6 +198,22 @@
       <notes>
         Bugfix: Embedded i18n forms could not be saved; thanks for the bug info to Sári Márton!
         Trivial: removed some debug logger calls (they were commented out anyway)
+      </notes>
+    </release>
+    <release>
+      <version>
+        <release>1.3.2</release>
+        <api>1.0.0</api>
+      </version>
+      <stability>
+       <release>stable</release>
+       <api>stable</api>
+      </stability>
+      <license uri="http://www.symfony-project.com/license">MIT license</license>
+      <date>2010-04-29</date>
+      <license>MIT</license>
+      <notes>
+        Thanks to koto we now have jQuery integration! All documented in the README.
       </notes>
     </release>
   </changelog>
