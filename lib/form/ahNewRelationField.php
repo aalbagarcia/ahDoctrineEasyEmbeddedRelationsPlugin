@@ -22,7 +22,11 @@ class ahNewRelationField extends sfWidgetForm
   public function getJavaScripts()
   {
     if (false === $this->getOption('addJavascript')) return array();
-    
-    return array(sprintf('/ahDoctrineEasyEmbeddedRelationsPlugin/js/ahDoctrineEasyEmbeddedRelationsPlugin.%s.js', $this->getOption('addJavascript')));
+
+    // allow only 0-9,a-z,A-Z,- and _ for framework name (LFI protection)
+    $cleanFrameworkName = preg_replace('#[^0-9a-z._-]#i', '', $this->getOption('useJSFramework'));
+
+    $filename = sprintf('ahDoctrineEasyEmbeddedRelationsPlugin.%s.js', $cleanFrameworkName);
+    return array('/ahDoctrineEasyEmbeddedRelationsPlugin/js/' . $filename);
   }
 }
