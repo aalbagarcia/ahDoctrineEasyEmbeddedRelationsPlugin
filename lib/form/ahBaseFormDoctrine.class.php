@@ -24,6 +24,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
         'formClassArgs' => array(),
         'displayEmptyRelations' => false,
         'newFormAfterExistingRelations' => false,
+        'formFormatter' => null,
         'multipleNewForms' => false,
         'newFormsInitialCount' => 1,
         'newFormsContainerForm' => null, // pass BaseForm object here or we will create ahNewRelationsContainerForm
@@ -57,7 +58,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
           if ($relationSettings['multipleNewForms']) // allow multiple new forms for this relation
           {
             $newFormsCount = $relationSettings['newFormsInitialCount'];
-            
+
             $subForm = $this->newFormsContainerFormFactory($relationSettings, $containerName);
             for ($i = 0; $i < $newFormsCount; $i++)
             {
@@ -78,14 +79,22 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
           }
         }
       }
-      
+
       $formClass = $relationSettings['formClass'];
       $formArgs = array_merge(
-        $relationSettings['formClassArgs'], 
+        $relationSettings['formClassArgs'],
         array(array('ah_add_delete_checkbox' => true))
       );
-      
+
       $this->embedRelation($relationName, $formClass, $formArgs);
+
+      if ($relationSettings['formFormatter']) { // switch formatter
+        $widget = $this[$relationName]->getWidget()->getWidget();
+        $widget->setFormFormatterName($relationSettings['formFormatter']);
+        // not only we have to change formatter name
+        // but also recreate schemadecorator as there is no setter for decorator in sfWidgetFormSchemaDecorator :(
+        $this->widgetSchema[$relationName] = new sfWidgetFormSchemaDecorator($widget, $widget->getFormFormatter()->getDecoratorFormat());
+      }
 
       /*
        * Unset the relation form(s) if:
@@ -370,6 +379,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
       $formArgs = empty($relationSettings['newFormClassArgs']) ? array() : $relationSettings['newFormClassArgs'];
       $r = new ReflectionClass($formClass);
 
+      /* @var $newForm sfFormObject */
       $newForm = $r->newInstanceArgs(array_merge(array($newFormObject), array($formArgs)));
       $newFormIdentifiers = $newForm->getObject()->getTable()->getIdentifierColumnNames();
       foreach ($newFormIdentifiers as $primaryKey)
@@ -429,11 +439,15 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
       $subForm = new ahNewRelationsContainerForm(
         array('new_relation' => $relationSettings['newRelationButtonLabel']),
         array(
-          'containerName' => $containerName, 
+          'containerName' => $containerName,
           'addByCloning' => $relationSettings['newRelationAddByCloning'],
           'useJSFramework' => $relationSettings['newRelationUseJSFramework']
         )
       );
+    }
+
+    if ($relationSettings['formFormatter']) {
+      $subForm->getWidgetSchema()->setFormFormatterName($relationSettings['formFormatter']);
     }
 
     unset($subForm[$subForm->getCSRFFieldName()]);

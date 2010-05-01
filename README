@@ -41,9 +41,9 @@ For the inspiration of this plugin please read this blog post: [Embedding Relati
         {
           ...
         }
-  
+
   * Publish the plugin assets
-  
+
         symfony plugin:publish-assets
 
   * Clear your cache
@@ -86,6 +86,7 @@ To embed one or more relations, add this to one of your form's configure method 
           'formClass'                     => 'ahIntranetSubversionRepositoryEmbeddedForm',
           'formClassArgs'                 => array(array('ah_add_delete_checkbox' => false, 'another_form_option' => ...)),
           'newFormAfterExistingRelations' => false,
+          'formFormatter'                 => null,
           'multipleNewForms'              => true,
           'newFormsInitialCount'          => 2,
           'newFormsContainerForm'         => null, // pass BaseForm object here or we will create ahNewRelationsContainerForm
@@ -190,16 +191,18 @@ Only the first option is required, the rest can be guessed using the schema and 
 
   * `newFormAfterExistingRelations` (boolean, not required): set this option to true to display the empty form to add new related objects below the existing related objects
 
+  * `formFormatter` (string, not required): class name of form formatter for all forms embedding the relation forms
+
   * `multipleNewForms` (boolean, not required): set this option to true if you want to have multiple new related object forms
 
   * `newFormsInitialCount` (integer, not required, default: 1): number of new object forms initially displayed (you may insert/delete those forms dynamically using JavaScript, all submitted subforms will be processed and validated.)
 
   * `newFormsContainerForm` (form object, not required): if not passed, plugin will create custom ahNewRelationsContainerForm form with a single `ahAddRelation` button below the new relation form(s)
-  
+
   * `newRelationButtonLabel` (string, not required, default: '+'): label for the `ahAddRelation` new relation button; the setting is used only when the `newFormsContainerForm` option is empty.
 
   * `newRelationAddByCloning` (boolean, not required, default: true): Should the plugin add new relation forms by cloning them client-side (with JavaScript). If set to false, you should add the behaviour yourself to the `ahAddRelation` form button. The setting is used only when the `newFormsContainerForm` option is empty.
-  
+
   * `newRelationUseJSFramework` (string, not required, default: 'jQuery'): the JavaScript framework that should handle the client-side logic of the `ahAddRelation` new relation button to dynamically add new forms in the browser. There is currently only a jQuery version available but a MooTools version is on my TODO list. :)
 
 ## Questions, bugs, feature requests? ##
