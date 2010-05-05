@@ -52,7 +52,7 @@ jQuery(function($) {
 	$('.ahAddRelation').click(function() {
 
 		// find last row of my siblings (each row represents a subform)
-		$row = $(this).parents('tr,li').siblings('tr:last,li:last');
+		$row = $(this).closest('tr,li').siblings('tr:last,li:last');
 
 		// clone it, increment the fields and insert it below, additionally triggering events
 		$row.trigger('beforeclone.ah');
