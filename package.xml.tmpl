@@ -10,10 +10,10 @@
     <email>info@asapdesign.de</email>
     <active>yes</active>
   </lead>
-  <date>2010-05-05</date>
+  <date>##CURRENT_DATE##</date>
   <version>
-    <release>1.3.3</release>
-    <api>1.0.0</api>
+    <release>##PLUGIN_VERSION##</release>
+    <api>##API_VERSION##</api>
   </version>
   <stability>
     <release>stable</release>
@@ -22,19 +22,7 @@
   <license uri="http://www.symfony-project.org/license">MIT license</license>
   <notes>-</notes>
   <contents>
-    <dir name="/">
-      <dir name="config">
-        <file name="ahDoctrineEasyEmbeddedRelationsPluginConfiguration.class.php" role="data"/>
-      </dir>
-      <dir name="lib">
-        <dir name="form">
-          <file name="ahBaseFormDoctrine.class.php" role="data"/>
-        </dir>
-      </dir>
-      <file name="LICENSE" role="data"/>
-      <file name="README" role="data"/>
-      <file name="TODO" role="data"/>
-    </dir>
+    ##CONTENTS##
   </contents>
   <dependencies>
     <required>
@@ -230,6 +218,22 @@
       <license>MIT</license>
       <notes>
         - koto: bugfix to jQuery cloning code (thanks to Luc Didry for fixing it)
+      </notes>
+    </release>
+    <release>
+      <version>
+        <release>1.3.4</release>
+        <api>1.0.0</api>
+      </version>
+      <stability>
+       <release>stable</release>
+       <api>stable</api>
+      </stability>
+      <license uri="http://www.symfony-project.com/license">MIT license</license>
+      <date>2010-05-05</date>
+      <license>MIT</license>
+      <notes>
+        Yikes! I forgot to add the new files that were introduced in version 1.3 and up. I was also naive enough to think PEAR would automatically include those. :(
       </notes>
     </release>
   </changelog>
