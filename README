@@ -206,7 +206,7 @@ Only the first option is required, the rest can either be guessed using the sche
 
   * `newRelationAddByCloning` (boolean, not required, default: true): Should the plugin add new relation forms by cloning them client-side (with JavaScript). If set to false, you should add the behaviour yourself to the `ahAddRelation` form button. The setting is used only when the `newFormsContainerForm` option is empty.
 
-  * `newRelationUseJSFramework` (string, not required, default: 'jQuery'): the JavaScript framework that should handle the client-side logic of the `ahAddRelation` new relation button to dynamically add new forms in the browser. There is currently only a jQuery version available but a MooTools version is on my TODO list. :)
+  * `newRelationUseJSFramework` (string, not required, default: 'jQuery'): the JavaScript framework that should handle the client-side logic of the `ahAddRelation` new relation button to dynamically add new forms in the browser - there is a jQuery and a MooTools version available. Pass 'jQuery' or 'MooTools' as the value for the option.
   
   * `customEmbeddedFormLabelMethod` (string, not required): This method is called on each existing related object (not the containing form!) so you can customize the form label that is shown in front of each existing embedded form. This option is new since version 1.4.0.
 
