@@ -30,7 +30,7 @@
   </developer>
   <date>##CURRENT_DATE##</date>
   <version>
-    <release>1.4.0</release>
+    <release>1.4.1</release>
     <api>1.1.0</api>
   </version>
   <stability>
@@ -279,6 +279,22 @@
         - bugfix: The plugin finally works with embedded forms that have checkboxes, radio buttons and/or file upload fields (what's especially interesting is the use of sfWidgetFormInputFileEditable)!
         
         I also finally added unit tests that should cover at least 80% of the functionality. Because I don't have that much time I used the symfony Core's unit tests as a starting point so they actually live inside the lib/vendor/symfony directory of one of my projects. If there's someone who knows how to set up plugin-internal unit tests (with a SQlite database for testing persistence stuff), I'd be glad to provide these unit tests. :) Help's always welcome!
+      </notes>
+    </release>
+    <release>
+      <version>
+        <release>1.4.1</release>
+        <api>1.1.0</api>
+      </version>
+      <stability>
+       <release>stable</release>
+       <api>stable</api>
+      </stability>
+      <license uri="http://www.symfony-project.com/license">MIT license</license>
+      <date>2010-06-28</date>
+      <license>MIT</license>
+      <notes>
+        - bugfix: fixed a bug regarding Doctrine inheritance
       </notes>
     </release>
   </changelog>

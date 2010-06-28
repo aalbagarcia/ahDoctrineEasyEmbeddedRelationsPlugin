@@ -460,11 +460,11 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
    */
   private function embeddedFormObjectFactory($relationName, Doctrine_Relation $relation)
   {
-    if (Doctrine_Relation::MANY === $relation->getType()) // FIXME (after unit tests are written): if (!$relation->isOneToOne())
+    if (!$relation->isOneToOne())
     {
       $newFormObjectClass = $relation->getClass();
       $newFormObject = new $newFormObjectClass();
-      $newFormObject[get_class($this->getObject())] = $this->getObject(); // FIXME: $newFormObject[$relation->getForeignFieldName()] = $this->getObject()->get($relation->getLocalFieldName());
+      $newFormObject[$relation->getForeignFieldName()] = $this->getObject()->get($relation->getLocalFieldName());
     } else
     {
       $newFormObject = $this->getObject()->$relationName;
