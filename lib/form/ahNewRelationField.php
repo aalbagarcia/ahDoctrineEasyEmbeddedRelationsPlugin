@@ -6,17 +6,18 @@
  */
 class ahNewRelationField extends sfWidgetForm
 {
-
   protected function configure($options = array(), $attributes = array())
   {
     $this->addRequiredOption('containerName');
     $this->addOption('addJavascript', false);
     $this->addOption('useJSFramework', 'jQuery');
+    $this->addOption('newRelationButtonLabel', '+');
   }
 
   public function render($name, $value = null, $attributes = array(), $errors = array())
   {
-    return $this->renderContentTag('button', $value !== null ? $value : '+', array('type' => 'button', 'class' => 'ahAddRelation', 'rel' => $this->getOption('containerName')));
+    return $this->renderContentTag('button', $this->getOption('newRelationButtonLabel'), array(
+      'type' => 'button', 'class' => 'ahAddRelation', 'rel' => $this->getOption('containerName')));
   }
 
   public function getJavaScripts()

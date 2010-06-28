@@ -14,10 +14,11 @@ class ahNewRelationsContainerForm extends BaseForm
     $button = new ahNewRelationField(array(
       'containerName' => $this->getOption('containerName'), 
       'addJavascript' => $this->getOption('addByCloning'),
-      'useJSFramework' => $this->getOption('useJSFramework')
+      'useJSFramework' => $this->getOption('useJSFramework'),
+      'newRelationButtonLabel' => $this->getOption('newRelationButtonLabel')
     ));
 
-    $this->setWidget('_', $button);
+    if ($this->getOption('addByCloning')) $this->setWidget('_', $button);
   }
   
   /**
@@ -30,6 +31,6 @@ class ahNewRelationsContainerForm extends BaseForm
   public function embedForm($name, sfForm $form, $decorator = null)
   {
     parent::embedForm($name, $form, $decorator);
-    $this->widgetSchema->moveField('_', sfWidgetFormSchema::LAST);
+    if ($this->getOption('addByCloning')) $this->widgetSchema->moveField('_', sfWidgetFormSchema::LAST);
   }
 }

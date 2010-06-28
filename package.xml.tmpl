@@ -10,10 +10,28 @@
     <email>info@asapdesign.de</email>
     <active>yes</active>
   </lead>
+  <lead>
+    <name>Krzysztof Kotowicz</name>
+    <user>koto</user>
+    <email>kkotowicz@gmail.com</email>
+    <active>yes</active>
+  </lead>
+  <developer>
+    <name>Gadfly</name>
+    <user>Gadfly</user>
+    <email>gadfly@linux-coders.org</email>
+    <active>yes</active>
+  </developer>
+  <developer>
+    <name>Fabrizio Bottino</name>
+    <user>FabryB</user>
+    <email>fabryb@fabryb.com</email>
+    <active>yes</active>
+  </developer>
   <date>##CURRENT_DATE##</date>
   <version>
-    <release>##PLUGIN_VERSION##</release>
-    <api>##API_VERSION##</api>
+    <release>1.4.0</release>
+    <api>1.1.0</api>
   </version>
   <stability>
     <release>stable</release>
@@ -234,6 +252,33 @@
       <license>MIT</license>
       <notes>
         Yikes! I forgot to add the new files that were introduced in version 1.3 and up. I was also naive enough to think PEAR would automatically include those. :(
+      </notes>
+    </release>
+    <release>
+      <version>
+        <release>1.4.0</release>
+        <api>1.1.0</api>
+      </version>
+      <stability>
+       <release>stable</release>
+       <api>stable</api>
+      </stability>
+      <license uri="http://www.symfony-project.com/license">MIT license</license>
+      <date>2010-06-28</date>
+      <license>MIT</license>
+      <notes>
+        - added new maintainers for the package (thanks koto!)
+        - bugfix: fixed a bug regarding Doctrine inheritance (thanks Yves!)
+        - bugfix: to disable the checkbox to delete existing related records set the option formClassArgs to this: 'formClassArgs' => array(array('ah_add_delete_checkbox' => false))
+        
+        - added new developer: FabryB :)
+        - bugfix: newFormClassArgs option didn't work the way it was described in the README (option was automatically wrapped in an array) => please read the UPGRADE GUIDE that is packaged with this plugin! :)
+        - bugfix: when using the multipleNewForms and newFormsInitialCount options it was indeed creating multiple forms to add related objects but it also did that for ONE-to-ONE relations ;-)
+        - bugfix: newRelationButtonLabel did not work at all :(
+        - new feature: customEmbeddedFormLabelMethod option is a method that is called on each existing related object (not the containing form!) so you can customize the form label that is shown in front of each existing embedded form. This option is new since version 1.4.0.
+        - bugfix: The plugin finally works with embedded forms that have checkboxes, radio buttons and/or file upload fields (what's especially interesting is the use of sfWidgetFormInputFileEditable)!
+        
+        I also finally added unit tests that should cover at least 80% of the functionality. Because I don't have that much time I used the symfony Core's unit tests as a starting point so they actually live inside the lib/vendor/symfony directory of one of my projects. If there's someone who knows how to set up plugin-internal unit tests (with a SQlite database for testing persistence stuff), I'd be glad to provide these unit tests. :) Help's always welcome!
       </notes>
     </release>
   </changelog>

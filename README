@@ -92,7 +92,8 @@ To embed one or more relations, add this to one of your form's configure method 
           'newFormsContainerForm'         => null, // pass BaseForm object here or we will create ahNewRelationsContainerForm
           'newRelationButtonLabel'        => '+',
           'newRelationAddByCloning'       => true,
-          'newRelationUseJSFramework'     => 'jQuery'
+          'newRelationUseJSFramework'     => 'jQuery',
+          'customEmbeddedFormLabelMethod' => 'getLabelTitle'
         ),
         '...' => array(
           ...
@@ -121,11 +122,11 @@ Each array defines one embedded relation and you can define a handful of options
 
 ### Options explained ###
 
-Only the first option is required, the rest can be guessed using the schema and Doctrine. :)
+Only the first option is required, the rest can either be guessed using the schema and Doctrine or is an option for which we provide sensible defaults. :)
 
   * `considerNewFormEmptyFields` (the only required option, array): trouble starts when the user does not want to add a new related object but only wants to edit the main object's properties.
     As the embedded forms are validated, an error is thrown if one of the embedded form's field's is required.
-    To remedy that you'll have to add all the fields to this array and if all of these are empty (read: only works for text fields for now), the empty form is dropped and no empty object is saved to the database (or validation errors thrown).
+    To remedy that you'll have to add all the fields to this array and if all of these are empty, the empty form is dropped and no empty object is saved to the database (or validation errors thrown).
 
   * `noNewForm` (boolean, not required): if false, no empty form to add a new related object is embedded so you can only manage existing related objects.
 
@@ -157,7 +158,7 @@ Only the first option is required, the rest can be guessed using the schema and 
 
   * `formClass` (string, not required): the form class to use for the existing related objects.
 
-  * `formClassArgs` (array of arrays, not required): form class options to pass to the existing related objects form class on instantiation
+  * `formClassArgs` (array of arrays, not required): form class options to pass to the existing related objects form class on instantiation.
     As of version 1.1 it's not necessary to create a separate form class for the existing related forms to display the delete checkbox.
     This is now handled by the symfony event dispatcher. If you want to change how that works you can always copy over this method and change it to suit your needs:
 
@@ -186,6 +187,8 @@ Only the first option is required, the rest can be guessed using the schema and 
 
     This works because we're calling the plugin's event handler method.
     This either returns the form so it added the delete checkbox and the validator and you can act on that, or it returns false and you don't act on that. Neat and tidy. :)
+    
+    If you want to disable the checkbox to delete existing related records entirely set this option to this: 'formClassArgs' => array(array('ah_add_delete_checkbox' => false)) or add it accordingly to your already existing form class arguments.
 
   * `displayEmptyRelations` (boolean, not required): set this option to true (false is the default) if you want to check for existing related objects yourself. This can be done in the form template and is useful if you want to let the user know that 'There are no related repositories yet.'. The default is just not displaying anything in this case, which works for me. :)
 
@@ -204,10 +207,11 @@ Only the first option is required, the rest can be guessed using the schema and 
   * `newRelationAddByCloning` (boolean, not required, default: true): Should the plugin add new relation forms by cloning them client-side (with JavaScript). If set to false, you should add the behaviour yourself to the `ahAddRelation` form button. The setting is used only when the `newFormsContainerForm` option is empty.
 
   * `newRelationUseJSFramework` (string, not required, default: 'jQuery'): the JavaScript framework that should handle the client-side logic of the `ahAddRelation` new relation button to dynamically add new forms in the browser. There is currently only a jQuery version available but a MooTools version is on my TODO list. :)
+  
+  * `customEmbeddedFormLabelMethod` (string, not required): This method is called on each existing related object (not the containing form!) so you can customize the form label that is shown in front of each existing embedded form. This option is new since version 1.4.0.
 
 ## Questions, bugs, feature requests? ##
 
 I can be reached via e-mail: info@asapdesign.de
 
-If you find bugs, have questions and/or feature requests, you can post to the symfony-user mailing list,
-of which I am an avid follower. :)
+If you find bugs, have questions and/or feature requests, you can post to the symfony-user mailing list, of which I am an avid follower. :)
