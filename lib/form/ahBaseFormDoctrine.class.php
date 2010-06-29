@@ -366,7 +366,8 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
   {
     foreach ($this->getObject()->getTable()->getRelations() as $relation)
     {
-      if (is_a($form->getObject(), $relation->getClass()))
+      $class = $relation->getClass();
+      if ($form->getObject() instanceof $class)
       {
         return $relation->getAlias();
       }
