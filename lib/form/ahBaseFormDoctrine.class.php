@@ -237,16 +237,16 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
             }
           }
 
-          if (empty($values[$containerName])) // all new forms were empty
+          if (count($values[$containerName]) === 0) // all new forms were empty
           {
-            unset($values[$containerName], $this[$containerName]);
+            unset($values[$containerName], $this->validatorSchema[$containerName]);
           }
         }
         else
         {
           if (!array_key_exists($containerName, $values) || $this->isNewFormEmpty($values[$containerName], $keys))
           {
-            unset($values[$containerName], $this[$containerName]);
+            unset($values[$containerName], $this->validatorSchema[$containerName]);
           }
         }
       }
@@ -343,12 +343,14 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
          * so there isn't anything weird happening
          */
         $relationName = $this->getRelationByEmbeddedFormClass($form);
-
-        if (!$relationName || !isset($this->scheduledForDeletion[$relationName]) || ($relationName && !array_key_exists($form->getObject()->getId(), array_flip($this->scheduledForDeletion[$relationName]))))
+        
+        if ($relationName && isset($this->scheduledForDeletion[$relationName]) && array_key_exists($form->getObject()->getId(), array_flip($this->scheduledForDeletion[$relationName])))
         {
-          $form->getObject()->save($con);
-          $form->saveEmbeddedForms($con);
+          continue;
         }
+        
+        $form->getObject()->save($con);
+        $form->saveEmbeddedForms($con);
       }
       else
       {

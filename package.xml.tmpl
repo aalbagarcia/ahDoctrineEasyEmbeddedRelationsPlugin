@@ -30,7 +30,7 @@
   </developer>
   <date>##CURRENT_DATE##</date>
   <version>
-    <release>1.4.3</release>
+    <release>1.4.4</release>
     <api>1.1.0</api>
   </version>
   <stability>
@@ -328,6 +328,22 @@
       <notes>
         - bugfix: fixed is_a() producing E_STRICT warning in PHP between 5.0.0 and 5.3.0 because is_a() is deprecated in these versions - it's not beginning with 5.3.0 - d'oh! :)
         - bugfix: creating a completely new main object and, at the same time, also adding new related objects did not work
+      </notes>
+    </release>
+    <release>
+      <version>
+        <release>1.4.4</release>
+        <api>1.1.0</api>
+      </version>
+      <stability>
+       <release>stable</release>
+       <api>stable</api>
+      </stability>
+      <license uri="http://www.symfony-project.com/license">MIT license</license>
+      <date>2010-06-30</date>
+      <license>MIT</license>
+      <notes>
+        - bugfix: empty new forms are no longer unset completely, only their values; so the admin generator doesn't crash anymore when the 'new_relationName' widget is in the 'display' array
       </notes>
     </release>
   </changelog>
