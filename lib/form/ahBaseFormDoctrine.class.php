@@ -253,12 +253,24 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
 
       if (isset($values[$relationName]))
       {
-        $oneToOneRelationFix = $this->getObject()->getTable()->getRelation($relationName)->isOneToOne() ? array($values[$relationName]) : $values[$relationName];
+      	$relation = $this->getObject()->getTable()->getRelation($relationName);
+        $oneToOneRelationFix = $relation->isOneToOne() ? array($values[$relationName]) : $values[$relationName];
         foreach ($oneToOneRelationFix as $i => $relationValues)
         {
           if (isset($relationValues['delete_object']) && $relationValues['id'])
           {
             $this->scheduledForDeletion[$relationName][$i] = $relationValues['id'];
+
+            // remove to not validate forms that shloud be deleted
+            if ($relation->isOneToOne())
+            {
+              unset($values[$relationName]);
+            }
+            else
+            {
+              unset($values[$relationName][$i]);
+            }
+            unset($this->embeddedForms[$relationName][$i], $this->validatorSchema[$relationName][$i]);
           }
         }
       }
