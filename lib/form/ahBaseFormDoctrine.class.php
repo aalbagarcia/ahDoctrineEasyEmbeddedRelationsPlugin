@@ -187,10 +187,19 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
    */
   protected function doBind(array $values)
   {
-    foreach ($this->embedRelations as $relationName => $keys)
-    {
-      $keys = $this->addDefaultRelationSettings($keys);
+    $values = $this->doBindEmbedRelations($this, $values);
 
+    parent::doBind($values);
+  }
+
+  protected function doBindEmbedRelations($form, array $values)
+  {
+    // iterate over all embeded relations
+    foreach ($form->embedRelations as $relationName => $keys)
+    {
+      $keys = $form->addDefaultRelationSettings($keys);
+
+      // check if new form exists
       if (!$keys['noNewForm'])
       {
         $containerName = 'new_'.$relationName;
@@ -201,82 +210,117 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
           {
             foreach ($values[$containerName] as $index => $subFormValues)
             {
-              if ($this->isNewFormEmpty($subFormValues, $keys))
+              if ($form->isNewFormEmpty($subFormValues, $keys))
               {
-                unset($values[$containerName][$index], $this->embeddedForms[$containerName][$index]);
-                unset($this->validatorSchema[$containerName][$index]);
+                unset($values[$containerName][$index], $form->embeddedForms[$containerName][$index], $form->validatorSchema[$containerName][$index]);
               }
               else
               {
                 // if new forms were inserted client-side, embed them here
-                if (!isset($this->embeddedForms[$containerName][$index]))
+                if (!isset($form->embeddedForms[$containerName][$index]))
                 {
                   // create and embed new form
                   $relation = $this->getObject()->getTable()->getRelation($relationName);
                   $addedForm = $this->embeddedFormFactory($relationName, $keys, $relation, ((int) $index) + 1);
-                  $ef = $this->embeddedForms[$containerName];
+                  $ef = $form->embeddedForms[$containerName];
                   $ef->embedForm($index, $addedForm);
                   // ... and reset other stuff (symfony loses all this since container form is already embedded)
-                  $this->validatorSchema[$containerName] = $ef->getValidatorSchema();
-                  $this->widgetSchema[$containerName] = new sfWidgetFormSchemaDecorator($ef->getWidgetSchema(), $ef->getWidgetSchema()->getFormFormatter()->getDecoratorFormat());
-                  $this->setDefault($containerName, $ef->getDefaults());
+                  $form->validatorSchema[$containerName] = $ef->getValidatorSchema();
+                  $form->widgetSchema[$containerName] = new sfWidgetFormSchemaDecorator($ef->getWidgetSchema(), $ef->getWidgetSchema()->getFormFormatter()->getDecoratorFormat());
+                  $form->setDefault($containerName, $ef->getDefaults());
                 }
               }
             }
           }
 
-          $this->validatorSchema[$containerName] = $this->embeddedForms[$containerName]->getValidatorSchema();
+          $form->validatorSchema[$containerName] = $form->embeddedForms[$containerName]->getValidatorSchema();
 
           // check for new forms that were deleted client-side and never submitted
-          foreach (array_keys($this->embeddedForms[$containerName]->embeddedForms) as $index)
+          foreach (array_keys($form->embeddedForms[$containerName]->embeddedForms) as $index)
           {
             if (!array_key_exists($index, $values[$containerName]))
             {
-                unset($this->embeddedForms[$containerName][$index]);
-                unset($this->validatorSchema[$containerName][$index]);
+                unset($form->embeddedForms[$containerName][$index], $form->validatorSchema[$containerName][$index]);
             }
           }
 
-          if (count($values[$containerName]) === 0) // all new forms were empty
+          // all new forms were empty
+          if (count($values[$containerName]) === 0)
           {
-            unset($values[$containerName], $this->validatorSchema[$containerName]);
+            unset($values[$containerName], $form->validatorSchema[$containerName]);
           }
         }
         else
         {
-          if (!array_key_exists($containerName, $values) || $this->isNewFormEmpty($values[$containerName], $keys))
+          // remove new form when it is empty
+          if (!array_key_exists($containerName, $values) || $form->isNewFormEmpty($values[$containerName], $keys))
           {
-            unset($values[$containerName], $this->embeddedForms[$containerName], $this->validatorSchema[$containerName]);
+            unset($values[$containerName], $form->embeddedForms[$containerName], $form->validatorSchema[$containerName]);
           }
         }
       }
 
       if (isset($values[$relationName]))
       {
-      	$relation = $this->getObject()->getTable()->getRelation($relationName);
-        $oneToOneRelationFix = $relation->isOneToOne() ? array($values[$relationName]) : $values[$relationName];
+      	$relation            = $form->getObject()->getTable()->getRelation($relationName);
+        $relationForm        = $form->embeddedForms[$relationName];
+      	$oneToOneRelationFix = $relation->isOneToOne() ? array($values[$relationName]) : $values[$relationName];
         foreach ($oneToOneRelationFix as $i => $relationValues)
         {
           if (isset($relationValues['delete_object']) && $relationValues['id'])
           {
-            $this->scheduledForDeletion[$relationName][$i] = $relationValues['id'];
+            $form->scheduledForDeletion[$relationName][$i] = $relationValues['id'];
 
-            // remove to not validate forms that shloud be deleted
+            // not validate forms that should be marked for deleting
             if ($relation->isOneToOne())
             {
-              unset($values[$relationName]);
+              unset($values[$relationName], $form->validatorSchema[$relationName]);
             }
             else
             {
-              unset($values[$relationName][$i]);
+              unset($values[$relationName][$i], $relationForm->validatorSchema[$i]);
             }
-            unset($this->embeddedForms[$relationName][$i], $this->validatorSchema[$relationName][$i]);
+          }
+          else
+          {
+            // walk recursive over embeded forms
+            if ($relation->isOneToOne())
+            {
+              $values[$relationName] = $form->doBindEmbedRelations($relationForm, $values[$relationName]);
+            }
+            else
+            {
+              $relationFormEntry = $relationForm->embeddedForms[$i];
+              $values[$relationName][$i] = $form->doBindEmbedRelations($relationFormEntry, $values[$relationName][$i]);
+
+              // only not bounded forms can be embed
+              $relationForm->isBound = false;
+              $relationFormEntry->isBound = false;
+
+              // bind entry form to relation form
+              $relationForm->embedForm($i, $relationFormEntry);
+
+              // revert bound state
+              $relationFormEntry->isBound = true;
+              $relationForm->isBound = true;
+            }
           }
         }
+
+        // only not bounded forms can be embed
+        $form->isBound = false;
+        $relationForm->isBound = false;
+
+        // bind relation form
+        $form->embedForm($relationName, $relationForm);
+
+        // revert bound state
+        $relationForm->isBound = true;
+        $form->isBound = true;
       }
     }
-    
-    parent::doBind($values);
+
+    return $values;
   }
 
   /**
@@ -317,8 +361,6 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
     }
 
     parent::doUpdateObject($values);
-    
-    // set foreign key here
   }
   
   public function getScheduledForDeletion()
@@ -328,12 +370,6 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
 
   /**
    * Saves embedded form objects.
-   * TODO: Check if it's possible to use embedRelations in one form and and also use embedRelations in the embedded form!
-   *       This means this would be possible:
-   *         1. Edit a user object via the userForm and
-   *         2. Embed the groups relation (user-has-many-groups) into the groupsForm and embed that into userForm and
-   *         2. Embed the permissions relation (group-has-many-permissions) into the groupsForm and
-   *         3. Just for kinks, embed the permissions relation again (user-has-many-permissions) into the userForm
    *
    * @param mixed $con   An optional connection object
    * @param array $forms An array of sfForm instances
@@ -355,7 +391,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
          * so there isn't anything weird happening
          */
         $relationName = $this->getRelationByEmbeddedFormClass($form);
-        
+
         if ($relationName && isset($this->scheduledForDeletion[$relationName]) && array_key_exists($form->getObject()->getId(), array_flip($this->scheduledForDeletion[$relationName])))
         {
           continue;
@@ -409,6 +445,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
 
   /**
    * Checks if given form values for new form are 'empty' (i.e. should the form be discarded)
+   *
    * @param array $values
    * @param array $keys settings for the embedded relation
    * @return bool
