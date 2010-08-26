@@ -9,6 +9,7 @@
  * @author     Krzysztof Kotowicz <kkotowicz at gmail dot com>
  * @author     Gadfly <gadfly@linux-coders.org>
  * @author     Fabrizio Bottino <fabryb@fabryb.com>
+ * @author     Matt Daum <matt@setfive.com>
  */
 abstract class ahBaseFormDoctrine extends sfFormDoctrine
 {
@@ -21,6 +22,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
         'newFormLabel' => null,
         'newFormClass' => null,
         'newFormClassArgs' => array(),
+        'newFormUnsetPrimaryKeys'=>true, // Sometimes you may not want to hide them, if they are a composite key for example
         'formClass' => null,
         'formClassArgs' => array(),
         'displayEmptyRelations' => false,
@@ -32,7 +34,8 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
         'newFormsContainerForm' => null, // pass BaseForm object here or we will create ahNewRelationsContainerForm
         'newRelationButtonLabel' => '+',
         'newRelationAddByCloning' => true,
-        'newRelationUseJSFramework' => 'jQuery'
+        'newRelationUseJSFramework' => 'jQuery',
+        
     );
 
   protected function addDefaultRelationSettings(array $settings)
@@ -49,7 +52,6 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
     foreach ($relations as $relationName => $relationSettings)
     {
       $relationSettings = $this->addDefaultRelationSettings($relationSettings);
-
       $relation = $this->getObject()->getTable()->getRelation($relationName);
       if (!$relationSettings['noNewForm'])
       {
@@ -265,11 +267,18 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
       	$relation            = $form->getObject()->getTable()->getRelation($relationName);
         $relationForm        = $form->embeddedForms[$relationName];
       	$oneToOneRelationFix = $relation->isOneToOne() ? array($values[$relationName]) : $values[$relationName];
+        
+        // Get the column(s) for the primary key, composite ones have multiple
+        $relationPrimaryKeys=Doctrine::getTable($relation->getClass())->getIdentifierColumnNames();
+        
         foreach ($oneToOneRelationFix as $i => $relationValues)
-        {
-          if (isset($relationValues['delete_object']) && $relationValues['id'])
+        { 
+          if (isset($relationValues['delete_object']))
           {
-            $form->scheduledForDeletion[$relationName][$i] = $relationValues['id'];
+            $primaryKeyValues=array();
+            foreach($relationPrimaryKeys as $pkName)
+              $primaryKeyValues[$pkName]=$relationValues[$pkName];
+            $form->scheduledForDeletion[$relationName][$i] = $primaryKeyValues;
 
             // not validate forms that should be marked for deleting
             if ($relation->isOneToOne())
@@ -334,6 +343,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
     {
       foreach ($this->getScheduledForDeletion() as $relationName => $ids)
       {
+        
         $relation = $this->getObject()->getTable()->getRelation($relationName);
         foreach ($ids as $index => $id)
         {
@@ -354,8 +364,8 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
           {
             $this->object->clearRelated($relationName);
           }
-
-          Doctrine::getTable($relation->getClass())->findOneById($id)->delete();
+          
+          Doctrine::getTable($relation->getClass())->find($id)->delete();
         }
       }
     }
@@ -392,7 +402,8 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
          */
         $relationName = $this->getRelationByEmbeddedFormClass($form);
 
-        if ($relationName && isset($this->scheduledForDeletion[$relationName]) && array_key_exists($form->getObject()->getId(), array_flip($this->scheduledForDeletion[$relationName])))
+
+        if ($relationName && isset($this->scheduledForDeletion[$relationName]) && false!==array_search($form->getObject()->identifier(),$this->scheduledForDeletion[$relationName]))
         {
           continue;
         }
@@ -500,10 +511,14 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
 
       /* @var $newForm sfFormObject */
       $newForm = $r->newInstanceArgs(array_merge(array($newFormObject), $formArgs));
-      $newFormIdentifiers = $newForm->getObject()->getTable()->getIdentifierColumnNames();
-      foreach ($newFormIdentifiers as $primaryKey)
+      
+      if($relationSettings['newFormUnsetPrimaryKeys'])
       {
-        unset($newForm[$primaryKey]);
+        $newFormIdentifiers = $newForm->getObject()->getTable()->getIdentifierColumnNames();
+        foreach ($newFormIdentifiers as $primaryKey)
+        {
+          unset($newForm[$primaryKey]);
+        }
       }
       unset($newForm[$relation->getForeignColumnName()]);
 

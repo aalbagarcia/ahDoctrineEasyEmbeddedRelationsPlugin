@@ -82,6 +82,7 @@ To embed one or more relations, add this to one of your form's configure method 
           'newFormLabel'                  => 'New repository!!!',
           'newFormClass'                  => 'ahIntranetSubversionRepositoryNewForm',
           'newFormClassArgs'              => array(array('sf_user' => $this->getOption('sf_user'))),
+          'newFormUnsetPrimaryKeys'=>true, // Sometimes you may not want to hide them, if they are a composite key for example
           'displayEmptyRelations'         => false,
           'formClass'                     => 'ahIntranetSubversionRepositoryEmbeddedForm',
           'formClassArgs'                 => array(array('ah_add_delete_checkbox' => false, 'another_form_option' => ...)),
@@ -201,6 +202,8 @@ Only the first option is required, the rest can either be guessed using the sche
   * `newFormsInitialCount` (integer, not required, default: 1): number of new object forms initially displayed (you may insert/delete those forms dynamically using JavaScript, all submitted subforms will be processed and validated.)
 
   * `newFormsContainerForm` (form object, not required): if not passed, plugin will create custom ahNewRelationsContainerForm form with a single `ahAddRelation` button below the new relation form(s)
+  
+  * `newFormUnsetPrimaryKeys` (boolean, not required) set this option if you do not want to unset the embedded forms primary keys, a situation like this may occur when you embed a form with a composite key
 
   * `newRelationButtonLabel` (string, not required, default: '+'): label for the `ahAddRelation` new relation button; the setting is used only when the `newFormsContainerForm` option is empty.
 
