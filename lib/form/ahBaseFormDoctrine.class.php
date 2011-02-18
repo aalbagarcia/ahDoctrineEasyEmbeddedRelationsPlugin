@@ -269,7 +269,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
       	$oneToOneRelationFix = $relation->isOneToOne() ? array($values[$relationName]) : $values[$relationName];
         
         // Get the column(s) for the primary key, composite ones have multiple
-        $relationPrimaryKeys=Doctrine::getTable($relation->getClass())->getIdentifierColumnNames();
+        $relationPrimaryKeys = Doctrine_Core::getTable($relation->getClass())->getIdentifierColumnNames();
         
         foreach ($oneToOneRelationFix as $i => $relationValues)
         { 
@@ -365,7 +365,7 @@ abstract class ahBaseFormDoctrine extends sfFormDoctrine
             $this->object->clearRelated($relationName);
           }
           
-          Doctrine::getTable($relation->getClass())->find($id)->delete();
+          Doctrine_Core::getTable($relation->getClass())->find($id)->delete();
         }
       }
     }
